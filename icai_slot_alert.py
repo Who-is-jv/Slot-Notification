@@ -220,48 +220,72 @@ def check_course_availability(driver, course_name: str) -> bool:
         # Wait for results to load (wait for table or message to appear)
         time.sleep(5)
         
-        # Check for "No Batch Available" message
+        # Check for "No Batch Available" message first
+        page_text = driver.page_source.lower()
+        no_batch_indicators = [
+            "no batch available",
+            "no batch",
+            "no records found",
+            "batch not available"
+        ]
+        
+        for indicator in no_batch_indicators:
+            if indicator in page_text:
+                logger.info(f"❌ No batches found for {course_name}")
+                return False
+        
+        # Check if there's a table with batch data and parse Available Seats column
         try:
-            # Look for common "no batch" indicators
-            page_text = driver.page_source.lower()
+            # Look for table rows (batches)
+            batch_rows = driver.find_elements(By.CSS_SELECTOR, "table tr")
             
-            # Check for "no batch available" or similar messages
-            no_batch_indicators = [
-                "no batch available",
-                "no batch",
-                "no records found",
-                "batch not available"
-            ]
+            if len(batch_rows) <= 1:  # Only header or no rows
+                logger.info(f"❌ No batch table found for {course_name}")
+                return False
             
-            for indicator in no_batch_indicators:
-                if indicator in page_text:
-                    logger.info(f"❌ No slots available for {course_name}")
-                    return False
+            logger.info(f"Found {len(batch_rows) - 1} batch(es) in table")
             
-            # Check if there's a table with batch data
-            try:
-                # Look for table rows (batches)
-                batch_rows = driver.find_elements(By.CSS_SELECTOR, "table tr")
-                if len(batch_rows) > 1:  # More than just header row
-                    logger.info(f"✅ Slots available for {course_name}!")
-                    return True
-            except NoSuchElementException:
-                pass
+            # Find the "Available Seats" column index
+            header_row = batch_rows[0]
+            headers = header_row.find_elements(By.TAG_NAME, "th")
+            available_seats_index = -1
             
-            # If we can't find clear indicators, check for any data table
-            try:
-                data_table = driver.find_element(By.CSS_SELECTOR, "table")
-                if data_table:
-                    # Check if table has meaningful content
-                    table_text = data_table.text.strip()
-                    if table_text and len(table_text) > 50:  # Has substantial content
-                        logger.info(f"✅ Slots available for {course_name}!")
-                        return True
-            except NoSuchElementException:
-                pass
+            for i, header in enumerate(headers):
+                header_text = header.text.strip().lower()
+                if "available" in header_text and "seat" in header_text:
+                    available_seats_index = i
+                    logger.info(f"Found 'Available Seats' column at index {i}")
+                    break
             
-            # Default: assume no slots if we can't find clear evidence
-            logger.warning(f"⚠️ Could not determine availability for {course_name}, assuming no slots")
+            if available_seats_index == -1:
+                logger.warning("Could not find 'Available Seats' column header")
+                return False
+            
+            # Check each batch row for available seats > 0
+            available_batches = 0
+            for row in batch_rows[1:]:  # Skip header row
+                cells = row.find_elements(By.TAG_NAME, "td")
+                if len(cells) > available_seats_index:
+                    seats_text = cells[available_seats_index].text.strip()
+                    try:
+                        seats_count = int(seats_text)
+                        if seats_count > 0:
+                            available_batches += 1
+                            batch_no = cells[0].text.strip() if len(cells) > 0 else "Unknown"
+                            logger.info(f"  ✅ Batch {batch_no}: {seats_count} seats available!")
+                    except ValueError:
+                        logger.warning(f"Could not parse seats count: '{seats_text}'")
+                        continue
+            
+            if available_batches > 0:
+                logger.info(f"✅ {available_batches} batch(es) with available seats for {course_name}!")
+                return True
+            else:
+                logger.info(f"❌ No available seats for {course_name} (all batches show 0 seats)")
+                return False
+                
+        except NoSuchElementException:
+            logger.warning(f"⚠️ Could not find batch table for {course_name}")
             return False
             
         except Exception as e:
