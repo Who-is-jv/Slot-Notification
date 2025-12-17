@@ -151,10 +151,10 @@ def check_course_availability(driver, course_name: str) -> bool:
         # Wait specifically for the Region dropdown to be present and visible
         logger.info("Waiting for Region dropdown to be ready...")
         try:
-            wait.until(EC.visibility_of_element_located((By.ID, "ddlRegion")))
+            wait.until(EC.visibility_of_element_located((By.ID, "ddl_reg")))
             logger.info("Region dropdown found and visible")
         except TimeoutException:
-            logger.error("Region dropdown with ID 'ddlRegion' not found!")
+            logger.error("Region dropdown with ID 'ddl_reg' not found!")
             logger.error(f"Page title: {driver.title}")
             logger.error(f"Current URL: {driver.current_url}")
             raise
@@ -162,7 +162,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         # Select Region dropdown
         logger.info(f"Selecting Region: {REGION}")
         region_dropdown = wait.until(
-            EC.presence_of_element_located((By.ID, "ddlRegion"))
+            EC.presence_of_element_located((By.ID, "ddl_reg"))
         )
         region_select = Select(region_dropdown)
         logger.info(f"Available regions: {[opt.text for opt in region_select.options]}")
@@ -175,15 +175,15 @@ def check_course_availability(driver, course_name: str) -> bool:
         logger.info("Checking POU dropdown...")
         try:
             # Wait for POU dropdown to have more than just the default option
-            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlPOU")).options) > 1)
-            pou_dropdown = driver.find_element(By.ID, "ddlPOU")
+            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlPou")).options) > 1)
+            pou_dropdown = driver.find_element(By.ID, "ddlPou")
             pou_select = Select(pou_dropdown)
             logger.info(f"POU dropdown populated with {len(pou_select.options)} options: {[opt.text for opt in pou_select.options]}")
             logger.info(f"Selecting POU: {POU}")
             pou_select.select_by_visible_text(POU)
             logger.info(f"✓ POU '{POU}' selected successfully")
         except TimeoutException:
-            pou_dropdown = driver.find_element(By.ID, "ddlPOU")
+            pou_dropdown = driver.find_element(By.ID, "ddlPou")
             pou_select = Select(pou_dropdown)
             logger.error(f"POU dropdown timeout. Available options: {[opt.text for opt in pou_select.options]}")
             raise
@@ -194,16 +194,16 @@ def check_course_availability(driver, course_name: str) -> bool:
         # Select Course dropdown - Wait for it to have options
         logger.info("Checking Course dropdown...")
         try:
-            # Wait for Course dropdown to have more than just the default option
-            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlCourse")).options) > 1)
-            course_dropdown = driver.find_element(By.ID, "ddlCourse")
+            # Wait for Course dropdown to have more than just the default option (already has options)
+            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddl_course")).options) > 0)
+            course_dropdown = driver.find_element(By.ID, "ddl_course")
             course_select = Select(course_dropdown)
             logger.info(f"Course dropdown populated with {len(course_select.options)} options")
             logger.info(f"Selecting Course: {course_name}")
             course_select.select_by_visible_text(course_name)
             logger.info(f"✓ Course '{course_name}' selected successfully")
         except TimeoutException:
-            course_dropdown = driver.find_element(By.ID, "ddlCourse")
+            course_dropdown = driver.find_element(By.ID, "ddl_course")
             course_select = Select(course_dropdown)
             logger.error(f"Course dropdown timeout. Available options: {[opt.text for opt in course_select.options]}")
             raise
@@ -213,7 +213,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         # Click "Get List" button
         logger.info("Clicking 'Get List' button")
         get_list_button = wait.until(
-            EC.element_to_be_clickable((By.ID, "btnGetList"))
+            EC.element_to_be_clickable((By.ID, "btn_getlist"))
         )
         get_list_button.click()
         
