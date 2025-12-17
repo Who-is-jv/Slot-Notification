@@ -139,24 +139,27 @@ def check_course_availability(driver, course_name: str) -> bool:
         )
         region_select = Select(region_dropdown)
         region_select.select_by_visible_text(REGION)
-        time.sleep(3)  # Wait for dependent dropdowns to populate
+        logger.info("Region selected, waiting for POU dropdown to populate...")
+        time.sleep(5)  # Critical: Wait for POU dropdown to populate after region selection
         
-        # Select POU dropdown
+        # Select POU dropdown - Wait for it to have options
         logger.info(f"Selecting POU: {POU}")
-        pou_dropdown = wait.until(
-            EC.presence_of_element_located((By.ID, "ddlPOU"))
-        )
+        # Wait for POU dropdown to have more than just the default option
+        wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlPOU")).options) > 1)
+        pou_dropdown = driver.find_element(By.ID, "ddlPOU")
         pou_select = Select(pou_dropdown)
         pou_select.select_by_visible_text(POU)
-        time.sleep(3)  # Wait for course dropdown to populate
+        logger.info("POU selected, waiting for Course dropdown to populate...")
+        time.sleep(5)  # Critical: Wait for course dropdown to populate after POU selection
         
-        # Select Course dropdown
+        # Select Course dropdown - Wait for it to have options
         logger.info(f"Selecting Course: {course_name}")
-        course_dropdown = wait.until(
-            EC.presence_of_element_located((By.ID, "ddlCourse"))
-        )
+        # Wait for Course dropdown to have more than just the default option
+        wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlCourse")).options) > 1)
+        course_dropdown = driver.find_element(By.ID, "ddlCourse")
         course_select = Select(course_dropdown)
         course_select.select_by_visible_text(course_name)
+        logger.info("Course selected")
         time.sleep(3)
         
         # Click "Get List" button
