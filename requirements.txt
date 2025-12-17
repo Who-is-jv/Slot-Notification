@@ -1,0 +1,14 @@
+# ICAI Slot Monitor - Python Dependencies
+# ==========================================
+# Install with: pip install -r requirements.txt
+
+# Web scraping and automation
+selenium==4.15.2
+
+# HTTP requests for Telegram API
+requests==2.31.0
+
+# Note: Chrome/Chromium browser must be installed separately
+# For GitHub Actions, we'll use setup-chrome action in the workflow
+
+
