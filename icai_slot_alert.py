@@ -129,8 +129,8 @@ def check_course_availability(driver, course_name: str) -> bool:
         bool: True if slots are available, False otherwise
     """
     try:
-        # Wait for page to load
-        wait = WebDriverWait(driver, 20)
+        # Wait for page to load with increased timeout
+        wait = WebDriverWait(driver, 30)
         
         # Select Region dropdown
         logger.info(f"Selecting Region: {REGION}")
@@ -139,7 +139,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         )
         region_select = Select(region_dropdown)
         region_select.select_by_visible_text(REGION)
-        time.sleep(2)  # Wait for dependent dropdowns to populate
+        time.sleep(3)  # Wait for dependent dropdowns to populate
         
         # Select POU dropdown
         logger.info(f"Selecting POU: {POU}")
@@ -148,7 +148,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         )
         pou_select = Select(pou_dropdown)
         pou_select.select_by_visible_text(POU)
-        time.sleep(2)  # Wait for course dropdown to populate
+        time.sleep(3)  # Wait for course dropdown to populate
         
         # Select Course dropdown
         logger.info(f"Selecting Course: {course_name}")
@@ -157,7 +157,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         )
         course_select = Select(course_dropdown)
         course_select.select_by_visible_text(course_name)
-        time.sleep(2)
+        time.sleep(3)
         
         # Click "Get List" button
         logger.info("Clicking 'Get List' button")
@@ -167,7 +167,7 @@ def check_course_availability(driver, course_name: str) -> bool:
         get_list_button.click()
         
         # Wait for results to load (wait for table or message to appear)
-        time.sleep(3)
+        time.sleep(5)
         
         # Check for "No Batch Available" message
         try:
@@ -241,15 +241,15 @@ def main():
         # Setup Chrome driver
         driver = setup_chrome_driver()
         
-        # Navigate to the website
-        logger.info(f"Navigating to: {WEBSITE_URL}")
-        driver.get(WEBSITE_URL)
-        time.sleep(3)  # Wait for page to load
-        
         # Check each course
         for course in COURSES_TO_MONITOR:
             logger.info(f"\n--- Checking: {course} ---")
             try:
+                # Navigate to the website (fresh page for each course)
+                logger.info(f"Navigating to: {WEBSITE_URL}")
+                driver.get(WEBSITE_URL)
+                time.sleep(5)  # Wait for page to load completely
+                
                 if check_course_availability(driver, course):
                     available_courses.append(course)
                     # Send notification immediately
@@ -257,6 +257,7 @@ def main():
                     time.sleep(1)  # Small delay between notifications
             except Exception as e:
                 logger.error(f"Error checking {course}: {e}")
+                logger.info("Continuing with next course...")
                 continue
         
         # Summary
