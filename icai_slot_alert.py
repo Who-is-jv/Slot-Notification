@@ -130,7 +130,34 @@ def check_course_availability(driver, course_name: str) -> bool:
     """
     try:
         # Wait for page to load with increased timeout
-        wait = WebDriverWait(driver, 30)
+        wait = WebDriverWait(driver, 40)
+        
+        # Wait for page to be fully loaded (wait for body and key elements)
+        logger.info("Waiting for page to load completely...")
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        time.sleep(3)  # Additional wait for JavaScript to execute
+        
+        # Debug: Check if we can find any dropdowns
+        try:
+            all_selects = driver.find_elements(By.TAG_NAME, "select")
+            logger.info(f"Found {len(all_selects)} dropdown elements on page")
+            for i, sel in enumerate(all_selects[:5]):  # Show first 5
+                sel_id = sel.get_attribute("id") or "no-id"
+                sel_name = sel.get_attribute("name") or "no-name"
+                logger.info(f"  Dropdown {i+1}: id='{sel_id}', name='{sel_name}'")
+        except Exception as e:
+            logger.warning(f"Could not enumerate dropdowns: {e}")
+        
+        # Wait specifically for the Region dropdown to be present and visible
+        logger.info("Waiting for Region dropdown to be ready...")
+        try:
+            wait.until(EC.visibility_of_element_located((By.ID, "ddlRegion")))
+            logger.info("Region dropdown found and visible")
+        except TimeoutException:
+            logger.error("Region dropdown with ID 'ddlRegion' not found!")
+            logger.error(f"Page title: {driver.title}")
+            logger.error(f"Current URL: {driver.current_url}")
+            raise
         
         # Select Region dropdown
         logger.info(f"Selecting Region: {REGION}")
