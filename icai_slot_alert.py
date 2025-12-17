@@ -138,28 +138,49 @@ def check_course_availability(driver, course_name: str) -> bool:
             EC.presence_of_element_located((By.ID, "ddlRegion"))
         )
         region_select = Select(region_dropdown)
+        logger.info(f"Available regions: {[opt.text for opt in region_select.options]}")
         region_select.select_by_visible_text(REGION)
-        logger.info("Region selected, waiting for POU dropdown to populate...")
+        logger.info(f"✓ Region '{REGION}' selected successfully")
+        logger.info("Waiting for POU dropdown to populate...")
         time.sleep(5)  # Critical: Wait for POU dropdown to populate after region selection
         
         # Select POU dropdown - Wait for it to have options
-        logger.info(f"Selecting POU: {POU}")
-        # Wait for POU dropdown to have more than just the default option
-        wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlPOU")).options) > 1)
-        pou_dropdown = driver.find_element(By.ID, "ddlPOU")
-        pou_select = Select(pou_dropdown)
-        pou_select.select_by_visible_text(POU)
-        logger.info("POU selected, waiting for Course dropdown to populate...")
+        logger.info("Checking POU dropdown...")
+        try:
+            # Wait for POU dropdown to have more than just the default option
+            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlPOU")).options) > 1)
+            pou_dropdown = driver.find_element(By.ID, "ddlPOU")
+            pou_select = Select(pou_dropdown)
+            logger.info(f"POU dropdown populated with {len(pou_select.options)} options: {[opt.text for opt in pou_select.options]}")
+            logger.info(f"Selecting POU: {POU}")
+            pou_select.select_by_visible_text(POU)
+            logger.info(f"✓ POU '{POU}' selected successfully")
+        except TimeoutException:
+            pou_dropdown = driver.find_element(By.ID, "ddlPOU")
+            pou_select = Select(pou_dropdown)
+            logger.error(f"POU dropdown timeout. Available options: {[opt.text for opt in pou_select.options]}")
+            raise
+        
+        logger.info("Waiting for Course dropdown to populate...")
         time.sleep(5)  # Critical: Wait for course dropdown to populate after POU selection
         
         # Select Course dropdown - Wait for it to have options
-        logger.info(f"Selecting Course: {course_name}")
-        # Wait for Course dropdown to have more than just the default option
-        wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlCourse")).options) > 1)
-        course_dropdown = driver.find_element(By.ID, "ddlCourse")
-        course_select = Select(course_dropdown)
-        course_select.select_by_visible_text(course_name)
-        logger.info("Course selected")
+        logger.info("Checking Course dropdown...")
+        try:
+            # Wait for Course dropdown to have more than just the default option
+            wait.until(lambda d: len(Select(d.find_element(By.ID, "ddlCourse")).options) > 1)
+            course_dropdown = driver.find_element(By.ID, "ddlCourse")
+            course_select = Select(course_dropdown)
+            logger.info(f"Course dropdown populated with {len(course_select.options)} options")
+            logger.info(f"Selecting Course: {course_name}")
+            course_select.select_by_visible_text(course_name)
+            logger.info(f"✓ Course '{course_name}' selected successfully")
+        except TimeoutException:
+            course_dropdown = driver.find_element(By.ID, "ddlCourse")
+            course_select = Select(course_dropdown)
+            logger.error(f"Course dropdown timeout. Available options: {[opt.text for opt in course_select.options]}")
+            raise
+        
         time.sleep(3)
         
         # Click "Get List" button
