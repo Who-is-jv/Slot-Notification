@@ -40,7 +40,7 @@ REGION = "Southern"
 POU = "HYDERABAD"
 COURSES_TO_MONITOR = [
     "Advanced (ICITSS) MCS Course",
-    "ICITSS - Information Technology",
+    "AICITSS - Advanced Information Technology",
     "ICITSS - Orientation Course"
 ]
 
